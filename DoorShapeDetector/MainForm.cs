@@ -17,10 +17,21 @@ namespace DoorShapeDetector
     public partial class MainForm : Form
     {
         Dictionary<string, Image<Bgr, byte>> imgList;
+        DataTable dt = new DataTable();
         public MainForm()
         {
             InitializeComponent();
             imgList = new Dictionary<string, Image<Bgr, byte>>();
+
+
+            // datatable 
+            dt.Columns.Add("ID");
+            dt.Columns.Add("Point");
+            dt.Columns.Add("Angle");
+            dt.Columns.Add("Size");
+            dt.Columns.Add("Octave");
+            dt.Columns.Add("Response");
+
         }
 
 
@@ -43,8 +54,10 @@ namespace DoorShapeDetector
         {
             try
             {
-               
-                OpenFileDialog dialog = new OpenFileDialog();
+
+                imgList.Clear();
+                picTemplate.Image = null;
+                    OpenFileDialog dialog = new OpenFileDialog();
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     var img = new Image<Bgr, byte>(dialog.FileName);
@@ -294,7 +307,7 @@ namespace DoorShapeDetector
                     ApplyHarisCorner(threshold);
                     break;
                 case 1:
-                    Shi_Tomasi();
+                    DrawKeypoints();
                     break;
 
                 case 2:
@@ -306,7 +319,7 @@ namespace DoorShapeDetector
         }
 
 
-        private void Shi_Tomasi()
+        private void DrawKeypoints()
         {
 
             try
@@ -321,11 +334,31 @@ namespace DoorShapeDetector
 
                 GFTTDetector detector = new GFTTDetector(2000, 0.06);
                 var corners = detector.Detect(gray);
+                dt.Rows.Clear();
+                foreach (MKeyPoint pt in corners)
+                {
+
+
+
+                    dt.Rows.Add(pt.ClassId,
+                        pt.Point.ToString(),
+                        pt.Angle,
+                        pt.Size,
+                         pt.Octave,
+                          pt.Response
+
+                        );
+
+                }
+
+
+
 
                 Mat outimg = new Mat();
                 Features2DToolbox.DrawKeypoints(img, new VectorOfKeyPoint(corners), outimg, new Bgr(0, 0, 255));
 
                 imageBoxEx1 .Image = outimg.ToBitmap();
+                dataGridView1.DataSource = dt;
             }
             catch (Exception ex)
             {
@@ -333,7 +366,8 @@ namespace DoorShapeDetector
             }
         }
 
-
+       
+       
 
         private void ApplyFASTFeatureDetector(int threshold = 10)
         {
@@ -349,11 +383,28 @@ namespace DoorShapeDetector
 
                 FastFeatureDetector detector = new FastFeatureDetector(threshold);
                 var corners = detector.Detect(gray);
+                dt.Rows.Clear();
+                lab_notes.Text = "Number of corners: " + corners.Length.ToString();
+                foreach (MKeyPoint  pt in corners)
+                {
 
+                   
+
+                    dt.Rows.Add(pt.ClassId,
+                        pt.Point.ToString (),
+                        pt.Angle ,
+                        pt.Size ,
+                         pt.Octave ,
+                          pt.Response 
+                         
+                        );
+                
+                }
                 Mat outimg = new Mat();
                 Features2DToolbox.DrawKeypoints(img, new VectorOfKeyPoint(corners), outimg, new Bgr(0, 0, 255));
 
                 imageBoxEx1 .Image = outimg.ToBitmap();
+                dataGridView1.DataSource = dt;
 
             }
             catch (Exception ex)
